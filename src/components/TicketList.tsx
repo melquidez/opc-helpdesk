@@ -106,7 +106,8 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                                             </span>
                                         </td>
                                         <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                                            <Link href={'/tickets/' + btoa(JSON.stringify(ticket))}
+                                            {/* <i className="fa fa-ellipsis-v"></i> */}
+                                            <Link href={'/tickets/' + ticket.ticketid}
                                                 className="text-xs font-semibold leading-tight text-slate-400"
                                             >
                                                 Edit
