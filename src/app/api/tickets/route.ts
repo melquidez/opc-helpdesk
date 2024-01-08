@@ -5,7 +5,37 @@ import { userDetails } from "@/tools/auth";
 
 export const GET = async (req: NextRequest, res: NextResponse) => {
     try {
-        const id = req.nextUrl.pathname;
+
+        const searchParam = req.nextUrl.searchParams
+        if(searchParam.has('id')){
+            const ticketid = searchParam.get('id')
+            const query = `
+                SELECT SQL_CALC_FOUND_ROWS tickets.*,
+                users.username          AS UserUserName,
+                users.userrole          AS UserUserRole,
+                ticketstatus.statusname AS TicketStatusName,
+                tags.tagname,
+                ticketanalytics.viewscount,
+                ticketanalytics.resolutiontime,
+                ticketanalytics.analyticsdate
+            FROM   tickets
+                JOIN users
+                ON tickets.userid = users.userid
+                JOIN ticketstatus
+                ON tickets.statusid = ticketstatus.statusid
+                LEFT JOIN tickettags
+                    ON tickets.ticketid = tickettags.ticketid
+                LEFT JOIN tags
+                    ON tickettags.tagid = tags.tagid
+                LEFT JOIN ticketanalytics
+                    ON tickets.ticketid = ticketanalytics.ticketid
+            WHERE tickets.ticketid = ?
+        `;
+
+            const data = await db.query(query,[ticketid]);
+            return Response.json(...data); // work on this
+        }
+
 
         const qString = req.nextUrl.searchParams;
         const page:any = qString.get('page') || 1;
@@ -59,6 +89,7 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
 
 interface FormData {
     ticketid?:number,
+    statusid?:number,
     title:string,
     description: string
 }
@@ -102,10 +133,10 @@ export const PUT = async (req: Request, res: Response)=>{
         if (!user){
             return Response.json({error: 'Unauthorized!'})
         }
-        const query = 'UPDATE tickets SET title = ?, description = ?, updatedat = NOW() WHERE ticketid = ?';
+        const query = 'UPDATE tickets SET title = ?, description = ?, statusid = ? , updatedat = NOW() WHERE ticketid = ?';
 
         const result = await db.query(query,
-            [data.title, data.description, data.ticketid]
+            [data.title, data.description, data.statusid, data.ticketid]
         );
 
 
