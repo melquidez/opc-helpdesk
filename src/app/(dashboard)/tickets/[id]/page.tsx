@@ -4,7 +4,8 @@
 // import { userInfo } from "@/tools/auth";
 import modalState from "@/tools/modalState";
 import { useRouter } from "next/navigation";
-import React, { SyntheticEvent, useState } from "react";
+import React, { SyntheticEvent, useEffect, useState } from "react";
+import { Dropdown } from "flowbite-react";
 
 
 // interface ModalProps {
@@ -16,7 +17,9 @@ import React, { SyntheticEvent, useState } from "react";
 interface FormData {
     ticketid:number | string,
     title: string,
-    description: string
+    description: string,
+    statusid:number | string
+    ticketstatusname: string
 }
 
 interface Ticket {
@@ -38,15 +41,47 @@ interface Ticket {
 
 const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
 
+
+
     const { back } = useRouter()
 
-    const ticketData: Ticket = JSON.parse(atob(params.id)); // base64
+
+    // const ticketData: Ticket = JSON.parse(atob(params.id)); // base64
+    // console.log(ticketData)
+
+
 
     const [formData, setFormData] = useState<FormData>({
-        ticketid: ticketData.ticketid,
-        title: ticketData.title,
-        description: ticketData.description
+        ticketid: 0,
+        title: '',
+        description: '',
+        statusid: 0,
+        ticketstatusname: ''
     })
+
+
+    const ticketData = async () => {
+        const res = await fetch(`/api/tickets?id=${params.id}`,{
+            method:'get',
+            headers: {"Content-Type": "application/json"},
+        })
+        const data: Ticket = await res.json()
+        setFormData({
+            ticketid: data.ticketid,
+            title: data.title,
+            description: data.description,
+            statusid: data.statusid,
+            ticketstatusname: data.TicketStatusName
+        })
+    }
+
+
+    useEffect(()=>{
+        ticketData();
+    },[])
+
+
+
 
     const [errors,setErrors] = useState<Partial<FormData>>({});
 
@@ -131,7 +166,23 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
                                     </div>
                                     { errors.description && <p id="standard_error_help" className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.description}</p>}
                                 </div>
+
+                                <div className="mb-5">
+                                    <div className="relative z-0">
+                                        {/* <input type="text" name="title" value={formData.title} onChange={changes} id="title" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " /> */}
+                                        <Dropdown label="Status" size="sm" inline dismissOnClick={true}
+                                            renderTrigger={()=>
+                                                <input type="text" name="status" value={formData.ticketstatusname} onChange={changes} id="status" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
+                                        }>
+                                            <Dropdown.Item onClick={()=>{formData.statusid = 1; formData.ticketstatusname= 'Open'}}>Open</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.statusid = 2; formData.ticketstatusname= 'In Progress'}}>In Progress</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.statusid = 3; formData.ticketstatusname= 'Closed'}}>Closed</Dropdown.Item>
+                                        </Dropdown>
+                                        <label htmlFor="status" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Status</label>
+                                    </div>
+                                </div>
                             </div>
+
                             <div className="flex items-center justify-start w-full">
                                 <button type="submit" className=" content-center focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 transition duration-150 ease-in-out hover:bg-indigo-600 bg-indigo-700 rounded text-white px-4 py-2 text-sm">
                                     <svg className="w-4 h-4 text-white " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 20">
