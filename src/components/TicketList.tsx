@@ -1,23 +1,25 @@
+import { Dropdown, DropdownItem } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { Children, ReactNode } from "react";
 
 
 interface Ticket {
-    "ticketid": number,
+    "ticket_id": number,
     "title": string,
     "description": string,
-    "userid": number,
-    "statusid": number,
-    "createdat": string,
-    "updatedat": string,
-    "UserUserName": string,
-    "UserUserRole": string,
-    "TicketStatusName": string,
-    "tagname": string,
-    "viewscount": number,
-    "resolutiontime": number,
-    "analyticsdate": string,
+    "user_id": number,
+    "assigned_to": number,
+    "status_id": number,
+    "created_at": string,
+    "updated_at": string,
+    "username": string,
+    "user_role": string,
+    "TicketStatus_Name": string,
+    "Tags": string,
+    "views_count": number,
+    "resolution_time": number,
+    "analytics_date": string,
 }
 
 interface TicketListProps {
@@ -62,7 +64,7 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                         <tbody>
                             {
                                 tickets.map((ticket)=>(
-                                    <tr key={ticket.ticketid}>
+                                    <tr key={ticket.ticket_id}>
                                         <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
                                             <div className="flex px-2 py-1">
                                                 <div>
@@ -76,10 +78,10 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                                                 </div>
                                                 <div className="flex flex-col justify-center">
                                                     <h6 className="mb-0 text-sm leading-normal">
-                                                        {ticket.UserUserName}
+                                                        {ticket.username}
                                                     </h6>
                                                     <p className="mb-0 p-1 px-2 bg-green-500 rounded-full text-xs leading-tight text-white">
-                                                        {ticket.UserUserRole}
+                                                        {ticket.user_role}
                                                     </p>
                                                 </div>
                                             </div>
@@ -94,7 +96,7 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
 
                                         <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
                                             <span className="bg-gradient-to-tl from-green-600 to-lime-400 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                                                {ticket.TicketStatusName}
+                                                {ticket.TicketStatus_Name}
                                             </span>
                                             <p className="mb-0 text-xs leading-tight text-slate-400">
                                                 Not Assigned
@@ -102,16 +104,25 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                                         </td>
                                         <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
                                             <span className="text-xs font-semibold leading-tight text-slate-400">
-                                                {new Date(ticket.createdat).toISOString()}
+                                                {new Date(ticket.created_at).toISOString()}
                                             </span>
                                         </td>
                                         <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
                                             {/* <i className="fa fa-ellipsis-v"></i> */}
-                                            <Link href={'/tickets/' + ticket.ticketid}
-                                                className="text-xs font-semibold leading-tight text-slate-400"
-                                            >
-                                                Edit
-                                            </Link>
+                                            <Dropdown label="" renderTrigger={()=>
+                                                <span className="p-3 cursor-pointer">
+                                                    <i className="fa fa-ellipsis-v"></i>
+                                                </span>
+                                            }>
+                                                <DropdownItem>
+                                                    <Link href={'/tickets/' + ticket.ticket_id}
+                                                        className="text-xs font-semibold leading-tight text-slate-400 flex justify-between items-center"
+                                                    >
+                                                        <i className="fa fa-edit"></i>
+                                                        &nbsp; Edit
+                                                    </Link>
+                                                </DropdownItem>
+                                            </Dropdown>
                                         </td>
                                     </tr>
                                 ))

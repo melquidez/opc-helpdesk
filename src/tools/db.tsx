@@ -9,7 +9,7 @@ const db = serverlessMysql({
     host: '127.0.0.1',
     user: 'virgo',
     password: '123456',
-    database: 'opc_helpdesk',
+    database: 'opc_helpdesk2',
     port:3306
   },
 });

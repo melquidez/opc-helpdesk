@@ -34,8 +34,8 @@ export const POST = async (req: Request) => {
         // const username = data.username;
         const userInfo = {
             username: data.username,
-            userid: user.userid,
-            userrole: user.userrole
+            user_id: user.user_id,
+            user_role: user.user_role
         }
 
         // Generate JWT token

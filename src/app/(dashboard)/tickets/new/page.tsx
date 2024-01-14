@@ -3,6 +3,7 @@
 import modalState from "@/tools/modalState";
 import { useRouter } from "next/navigation";
 import React, { SyntheticEvent, useState } from "react";
+import { Badge, Dropdown } from "flowbite-react";
 
 
 // interface ModalProps {
@@ -12,8 +13,9 @@ import React, { SyntheticEvent, useState } from "react";
 // }
 
 interface FormData {
-    title: string,
+    title: string
     description: string
+    tags:number
 }
 
 const TicketForm: React.FC = () => {
@@ -21,7 +23,8 @@ const TicketForm: React.FC = () => {
     const {back} = useRouter()
     const [formData, setFormData] = useState<FormData>({
         title: '',
-        description: ''
+        description: '',
+        tags:0
     })
 
     const [errors,setErrors] = useState<Partial<FormData>>({});
@@ -97,6 +100,7 @@ const TicketForm: React.FC = () => {
                                     </div>
                                     { errors.title && <p id="standard_error_help" className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.title}</p>}
                                 </div>
+
                                 <div>
                                     <div className="relative z-0">
                                         <textarea name="description" value={formData.description} onChange={changes} id="concern" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " >
@@ -104,6 +108,19 @@ const TicketForm: React.FC = () => {
                                         <label htmlFor="concern" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Concern</label>
                                     </div>
                                     { errors.description && <p id="standard_error_help" className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.description}</p>}
+                                </div>
+                                <div className="mb-5">
+                                    <div className="relative z-0">
+                                        <Dropdown label="Status" size="sm" inline dismissOnClick={true}
+                                            renderTrigger={()=>
+                                                <input type="text" name="status" value={formData.ticketstatusname} onChange={changes} id="status" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
+                                        }>
+                                            <Dropdown.Item onClick={()=>{formData.status_id = 1; formData.ticketstatusname= 'Open'}}>Open</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.status_id = 2; formData.ticketstatusname= 'In Progress'}}>In Progress</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.status_id = 3; formData.ticketstatusname= 'Closed'}}>Closed</Dropdown.Item>
+                                        </Dropdown>
+                                        <label htmlFor="status" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Status</label>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center justify-start w-full">

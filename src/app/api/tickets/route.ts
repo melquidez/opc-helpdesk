@@ -6,81 +6,93 @@ import { userDetails } from "@/tools/auth";
 export const GET = async (req: NextRequest, res: NextResponse) => {
     try {
 
-        const searchParam = req.nextUrl.searchParams
-        if(searchParam.has('id')){
-            const ticketid = searchParam.get('id')
-            const query = `
-                SELECT SQL_CALC_FOUND_ROWS tickets.*,
-                users.username          AS UserUserName,
-                users.userrole          AS UserUserRole,
-                ticketstatus.statusname AS TicketStatusName,
-                tags.tagname,
-                ticketanalytics.viewscount,
-                ticketanalytics.resolutiontime,
-                ticketanalytics.analyticsdate
-            FROM   tickets
-                JOIN users
-                ON tickets.userid = users.userid
-                JOIN ticketstatus
-                ON tickets.statusid = ticketstatus.statusid
-                LEFT JOIN tickettags
-                    ON tickets.ticketid = tickettags.ticketid
-                LEFT JOIN tags
-                    ON tickettags.tagid = tags.tagid
-                LEFT JOIN ticketanalytics
-                    ON tickets.ticketid = ticketanalytics.ticketid
-            WHERE tickets.ticketid = ?
-        `;
+        const searchParam = req.nextUrl.searchParams;
 
-            const data = await db.query(query,[ticketid]);
-            return Response.json(...data); // work on this
+        if (searchParam.has('id')) {
+            const ticketId = searchParam.get('id');
+            const query = `
+            SELECT SQL_CALC_FOUND_ROWS tickets.*,
+                users.username AS username,
+                users.user_role AS user_role,
+                ticket_status.status_name AS TicketStatus_Name,
+                GROUP_CONCAT(tags.tag_name) AS Tags,
+                ticket_analytics.views_count,
+                ticket_analytics.resolution_time,
+                ticket_analytics.analytics_date
+            FROM tickets
+                JOIN users ON tickets.user_id = users.user_id
+                JOIN ticket_status ON tickets.status_id = ticket_status.status_id
+                LEFT JOIN ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
+                LEFT JOIN tags ON ticket_tags.tag_id = tags.tag_id
+                LEFT JOIN ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
+                WHERE tickets.ticket_id = ?
+                GROUP BY tickets.ticket_id; -- Group by ticket ID to handle multiple tags
+            `;
+
+            const data = await db.query(query, [ticketId]);
+            return Response.json(...data);
         }
+
 
 
         const qString = req.nextUrl.searchParams;
         const page:any = qString.get('page') || 1;
-        const pageSize:any = 5;
-        const offset = (page - 1) * pageSize
-        // const results = await db.query("SELECT * FROM users");
+        const pageSize = 5;
+        const offset = (page - 1) * pageSize;
+
+        // const query = `
+        //     SELECT SQL_CALC_FOUND_ROWS tickets.*,
+        //         users.username AS username,
+        //         users.user_role AS user_role,
+        //         ticket_status.status_name AS TicketStatus_Name,
+        //         GROUP_CONCAT(tags.tag_name) AS Tags,
+        //         ticket_analytics.views_count,
+        //         ticket_analytics.resolution_time,
+        //         ticket_analytics.analytics_date
+        //     FROM tickets
+        //         JOIN users ON tickets.user_id = users.user_id
+        //         JOIN ticket_status ON tickets.status_id = ticket_status.status_id
+        //         LEFT JOIN ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
+        //         LEFT JOIN tags ON ticket_tags.tag_id = tags.tag_id
+        //         LEFT JOIN ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
+        //     ORDER BY tickets.created_at DESC
+        //     LIMIT ?, ?;
+        // `;
         const query = `
-                SELECT SQL_CALC_FOUND_ROWS tickets.*,
-                users.username          AS UserUserName,
-                users.userrole          AS UserUserRole,
-                ticketstatus.statusname AS TicketStatusName,
-                tags.tagname,
-                ticketanalytics.viewscount,
-                ticketanalytics.resolutiontime,
-                ticketanalytics.analyticsdate
-            FROM   tickets
-                JOIN users
-                ON tickets.userid = users.userid
-                JOIN ticketstatus
-                ON tickets.statusid = ticketstatus.statusid
-                LEFT JOIN tickettags
-                    ON tickets.ticketid = tickettags.ticketid
-                LEFT JOIN tags
-                    ON tickettags.tagid = tags.tagid
-                LEFT JOIN ticketanalytics
-                    ON tickets.ticketid = ticketanalytics.ticketid
-            ORDER BY tickets.createdat DESC
+            SELECT SQL_CALC_FOUND_ROWS tickets.*,
+                users.username AS username,
+                users.user_role AS user_role,
+                ticket_status.status_name AS TicketStatus_Name,
+                -- GROUP_CONCAT(tags.tag_name) AS Tags,
+                ticket_analytics.views_count,
+                ticket_analytics.resolution_time,
+                ticket_analytics.analytics_date
+            FROM tickets
+                JOIN users ON tickets.user_id = users.user_id
+                JOIN ticket_status ON tickets.status_id = ticket_status.status_id
+                -- LEFT JOIN ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
+                -- LEFT JOIN tags ON ticket_tags.tag_id = tags.tag_id
+                LEFT JOIN ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
+            ORDER BY tickets.created_at DESC
             LIMIT ?, ?;
         `;
 
-        const countQuery = "SELECT COUNT(*) AS total FROM tickets"
+        const countQuery = "SELECT COUNT(*) AS total FROM tickets";
 
-        const [ results, totalResults ]:any = await Promise.all([
-            db.query(query,[offset, +pageSize]),
+        const [results, totalResults]: any = await Promise.all([
+            db.query(query, [offset, pageSize]),
             db.query(countQuery)
         ]);
 
         const totalTickets = totalResults[0].total;
-        const totalPages = Math.ceil(totalTickets / pageSize)
+        const totalPages = Math.ceil(totalTickets / pageSize);
 
-        // const results = await db.query(query,[offset, +pageSize]);
-        return Response.json({totalTickets, totalPages, results});
+        return Response.json({ totalTickets, totalPages, results });
+
+
     } catch (error) {
         console.error("Error fetching data:", error);
-        return Response.json({ error: "Error fetching data" });
+        return Response.json({ error: error });
     } finally {
         await db.end();
     }
@@ -88,15 +100,15 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
 
 
 interface FormData {
-    ticketid?:number,
-    statusid?:number,
+    ticket_id?:number,
+    status_id?:number,
     title:string,
     description: string
 }
 interface CookieData {
     "username":string,
-    "userid":number,
-    "userrole":string
+    "user_id":number,
+    "user_role":string
 }
 export const POST = async (req: Request, res: Response)=>{
     try{
@@ -107,10 +119,10 @@ export const POST = async (req: Request, res: Response)=>{
         if (!user){
             return Response.json({error: 'Unauthorized!'})
         }
-        const query = 'INSERT INTO tickets (title, description, userid, statusid, createdat, updatedat) VALUES (?, ?, ?, ?, NOW(), NOW())';
+        const query = 'INSERT INTO tickets (title, description, user_id, status_id, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())';
 
         const result = await db.query(query,
-            [data.title, data.description, user.userid, 1]
+            [data.title, data.description, user.user_id, 1]
         );
 
 
@@ -133,10 +145,10 @@ export const PUT = async (req: Request, res: Response)=>{
         if (!user){
             return Response.json({error: 'Unauthorized!'})
         }
-        const query = 'UPDATE tickets SET title = ?, description = ?, statusid = ? , updatedat = NOW() WHERE ticketid = ?';
+        const query = 'UPDATE tickets SET title = ?, description = ?, status_id = ? , updated_at = NOW() WHERE ticket_id = ?';
 
         const result = await db.query(query,
-            [data.title, data.description, data.statusid, data.ticketid]
+            [data.title, data.description, data.status_id, data.ticket_id]
         );
 
 

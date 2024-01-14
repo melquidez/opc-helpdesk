@@ -15,28 +15,29 @@ import { Dropdown } from "flowbite-react";
 // }
 
 interface FormData {
-    ticketid:number | string,
+    ticket_id:number | string,
     title: string,
     description: string,
-    statusid:number | string
+    status_id:number | string
     ticketstatusname: string
 }
 
 interface Ticket {
-    "ticketid": number,
+    "ticket_id": number,
     "title": string,
     "description": string,
-    "userid": number,
-    "statusid": number,
-    "createdat": string,
-    "updatedat": string,
-    "UserUserName": string,
-    "UserUserRole": string,
-    "TicketStatusName": string,
-    "tagname": string,
-    "viewscount": number,
-    "resolutiontime": number,
-    "analyticsdate": string,
+    "user_id": number,
+    "assigned_to": number,
+    "status_id": number,
+    "created_at": string,
+    "updated_at": string,
+    "username": string,
+    "user_role": string,
+    "TicketStatus_Name": string,
+    "Tags": string,
+    "views_count": number,
+    "resolution_time": number,
+    "analytics_date": string,
 }
 
 const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
@@ -52,10 +53,10 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
 
 
     const [formData, setFormData] = useState<FormData>({
-        ticketid: 0,
+        ticket_id: 0,
         title: '',
         description: '',
-        statusid: 0,
+        status_id: 0,
         ticketstatusname: ''
     })
 
@@ -67,11 +68,11 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
         })
         const data: Ticket = await res.json()
         setFormData({
-            ticketid: data.ticketid,
+            ticket_id: data.ticket_id,
             title: data.title,
             description: data.description,
-            statusid: data.statusid,
-            ticketstatusname: data.TicketStatusName
+            status_id: data.status_id,
+            ticketstatusname: data.TicketStatus_Name
         })
     }
 
@@ -151,7 +152,7 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
 
                             <div className="grid grid-cols-1 gap-4">
                                 <div>
-                                    <input type="hidden" value={formData.ticketid} name="ticketid" readOnly/>
+                                    <input type="hidden" value={formData.ticket_id} name="ticket_id" readOnly/>
                                     <div className="relative z-0">
                                         <input type="text" name="title" value={formData.title} onChange={changes} id="title" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
                                         <label htmlFor="title" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Ticket title</label>
@@ -174,9 +175,9 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
                                             renderTrigger={()=>
                                                 <input type="text" name="status" value={formData.ticketstatusname} onChange={changes} id="status" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
                                         }>
-                                            <Dropdown.Item onClick={()=>{formData.statusid = 1; formData.ticketstatusname= 'Open'}}>Open</Dropdown.Item>
-                                            <Dropdown.Item onClick={()=>{formData.statusid = 2; formData.ticketstatusname= 'In Progress'}}>In Progress</Dropdown.Item>
-                                            <Dropdown.Item onClick={()=>{formData.statusid = 3; formData.ticketstatusname= 'Closed'}}>Closed</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.status_id = 1; formData.ticketstatusname= 'Open'}}>Open</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.status_id = 2; formData.ticketstatusname= 'In Progress'}}>In Progress</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.status_id = 3; formData.ticketstatusname= 'Closed'}}>Closed</Dropdown.Item>
                                         </Dropdown>
                                         <label htmlFor="status" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Status</label>
                                     </div>

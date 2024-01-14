@@ -6,9 +6,9 @@ import { generateToken } from "@/tools/auth";
 interface UserData{
     username: string,
     password: string,
-    userrole: string,
-    firstname: string,
-    lastname: string,
+    user_role: string,
+    first_name: string,
+    last_name: string,
     email: string,
     phone: string
 }
@@ -17,19 +17,19 @@ interface UserData{
 export const POST = async (req: Request) => {
     try {
         const data: UserData = await req.json();
-        // const { username, password, firstname, lastname, email, phone } = req.body;
+        // const { username, password, first_name, last_name, email, phone } = req.body;
         // return Response.json({message: data})
 
         const hashedPassword = await bcrypt.hash(data.password,10);
 
         const user = await db.transaction().query(
-            "INSERT INTO users (username, password, userrole) VALUES (?, ?, ?)",
-            [data.username, hashedPassword, data.userrole]
+            "INSERT INTO users (username, password, user_role) VALUES (?, ?, ?)",
+            [data.username, hashedPassword, data.user_role]
         ).query( async (r:{insertId:number})=>{
             // const userId = r.insertId
             await db.query(
-                "INSERT INTO userprofile (userid, firstname, lastname, email, phone) VALUES (?, ?, ?, ?, ?)",
-                [r.insertId, data.firstname, data.lastname, data.email, data.phone]
+                "INSERT INTO user_profile (user_id, first_name, last_name, email, phone) VALUES (?, ?, ?, ?, ?)",
+                [r.insertId, data.first_name, data.last_name, data.email, data.phone]
             );
         }
 
