@@ -15,7 +15,8 @@ import { Badge, Dropdown } from "flowbite-react";
 interface FormData {
     title: string
     description: string
-    tags:number
+    tag_name:string
+    tag_id:number
 }
 
 const TicketForm: React.FC = () => {
@@ -24,7 +25,8 @@ const TicketForm: React.FC = () => {
     const [formData, setFormData] = useState<FormData>({
         title: '',
         description: '',
-        tags:0
+        tag_name:'Network',
+        tag_id: 1
     })
 
     const [errors,setErrors] = useState<Partial<FormData>>({});
@@ -113,13 +115,15 @@ const TicketForm: React.FC = () => {
                                     <div className="relative z-0">
                                         <Dropdown label="Status" size="sm" inline dismissOnClick={true}
                                             renderTrigger={()=>
-                                                <input type="text" name="status" value={formData.ticketstatusname} onChange={changes} id="status" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
+                                                <input autoComplete="off" type="text" name="ticket_tags" value={formData.tag_name} onChange={changes} id="ticket_tags" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
                                         }>
-                                            <Dropdown.Item onClick={()=>{formData.status_id = 1; formData.ticketstatusname= 'Open'}}>Open</Dropdown.Item>
-                                            <Dropdown.Item onClick={()=>{formData.status_id = 2; formData.ticketstatusname= 'In Progress'}}>In Progress</Dropdown.Item>
-                                            <Dropdown.Item onClick={()=>{formData.status_id = 3; formData.ticketstatusname= 'Closed'}}>Closed</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.tag_id = 1; formData.tag_name= 'Network'}}>Network</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.tag_id = 2; formData.tag_name= 'Hardware'}}>Hardware</Dropdown.Item>
+                                            <Dropdown.Item onClick={()=>{formData.tag_id = 3; formData.tag_name= 'Software'}}>Software</Dropdown.Item>
                                         </Dropdown>
-                                        <label htmlFor="status" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Status</label>
+                                        <label htmlFor="ticket_tags" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">
+                                            CATEGORY
+                                        </label>
                                     </div>
                                 </div>
                             </div>

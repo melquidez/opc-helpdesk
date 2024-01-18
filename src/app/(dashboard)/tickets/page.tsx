@@ -5,8 +5,9 @@ import Card from "@/components/Card";
 import TicketList from "@/components/TicketList";
 import TicketModal from "@/components/TicketModal";
 import modalState from "@/tools/modalState";
+import { Spinner } from "flowbite-react";
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
 
 const Tickets: React.FC = () => {
@@ -83,9 +84,12 @@ const Tickets: React.FC = () => {
             <div className="w-full px-6 py-6 mx-auto">
                 <div className="flex flex-wrap -mx-3">
                     <div className="flex-none w-full max-w-full px-3">
-                        <TicketList tickets={tickets} >
-                            <AddTicketBtn />
-                        </TicketList>
+                        <Suspense fallback={<Spinner aria-label="Loading..."/>}>
+                            <TicketList tickets={tickets} >
+                                <AddTicketBtn />
+                            </TicketList>
+                        </Suspense>
+
                         <ReactPaginate
                             breakLabel="..."
                             nextLabel=">>"

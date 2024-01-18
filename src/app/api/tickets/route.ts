@@ -58,24 +58,35 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
         //     ORDER BY tickets.created_at DESC
         //     LIMIT ?, ?;
         // `;
+
         const query = `
-            SELECT SQL_CALC_FOUND_ROWS tickets.*,
+            SELECT SQL_CALC_FOUND_ROWS
+                tickets.*,
                 users.username AS username,
                 users.user_role AS user_role,
                 ticket_status.status_name AS TicketStatus_Name,
-                -- GROUP_CONCAT(tags.tag_name) AS Tags,
+                GROUP_CONCAT(tags.tag_name SEPARATOR ', ') AS Tags,
                 ticket_analytics.views_count,
                 ticket_analytics.resolution_time,
                 ticket_analytics.analytics_date
-            FROM tickets
-                JOIN users ON tickets.user_id = users.user_id
-                JOIN ticket_status ON tickets.status_id = ticket_status.status_id
-                -- LEFT JOIN ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
-                -- LEFT JOIN tags ON ticket_tags.tag_id = tags.tag_id
-                LEFT JOIN ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
-            ORDER BY tickets.created_at DESC
+            FROM
+                tickets
+            JOIN
+                users ON tickets.user_id = users.user_id
+            JOIN
+                ticket_status ON tickets.status_id = ticket_status.status_id
+            LEFT JOIN
+                ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
+            LEFT JOIN
+                tags ON ticket_tags.tag_id = tags.tag_id
+            LEFT JOIN
+                ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
+            GROUP BY
+                tickets.ticket_id  -- Assuming ticket_id is the primary key
+            ORDER BY
+                tickets.created_at DESC
             LIMIT ?, ?;
-        `;
+        `
 
         const countQuery = "SELECT COUNT(*) AS total FROM tickets";
 
@@ -100,14 +111,16 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
 
 
 interface FormData {
-    ticket_id?:number,
-    status_id?:number,
-    title:string,
+    ticket_id?:number
+    status_id?:number
+    title:string
     description: string
+    tag_id: Array<number> | number
+    tag_name:string
 }
 interface CookieData {
-    "username":string,
-    "user_id":number,
+    "username":string
+    "user_id":number
     "user_role":string
 }
 export const POST = async (req: Request, res: Response)=>{
@@ -119,12 +132,30 @@ export const POST = async (req: Request, res: Response)=>{
         if (!user){
             return Response.json({error: 'Unauthorized!'})
         }
-        const query = 'INSERT INTO tickets (title, description, user_id, status_id, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())';
+        const ticketQuery = 'INSERT INTO tickets (title, description, user_id, status_id, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())';
+        const ticketTagsQuery = 'INSERT INTO ticket_tags (ticket_id, tag_id, ticket_tag_created_at, ticket_tag_updated_at) VALUES (?, ?, NOW(), NOW())';
 
-        const result = await db.query(query,
+        const tag_ids = data.tag_id
+        const ticketData = await db.transaction().query(
+            ticketQuery,
             [data.title, data.description, user.user_id, 1]
-        );
+        ).query( async (r:{insertId:number})=>{
+            if(Array.isArray(tag_ids)){
+                const tagPromise = tag_ids.map( async (tagId:number)=>{
+                    await db.query(
+                        ticketTagsQuery,
+                        [r.insertId, tagId]
+                    );
+                })
+                await Promise.all(tagPromise)
+            } else{
+                await db.query(ticketTagsQuery,[r.insertId,tag_ids])
+            }
 
+        }).rollback((e: any )=> {
+            console.error('Transaction rollback:', e);
+            Response.json({ error: 'Internal Server Error' });
+        }).commit();
 
         return Response.json({message: 'Ticket posted successfully!'})
     } catch(error){

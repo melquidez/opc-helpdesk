@@ -1,4 +1,4 @@
-import { Dropdown, DropdownItem } from "flowbite-react";
+import { Badge, Dropdown, DropdownItem } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
 import React, { Children, ReactNode } from "react";
@@ -28,7 +28,20 @@ interface TicketListProps {
 }
 
 const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
-
+    /**
+     *
+     * @param content string
+     * @param limit number
+     * @returns string
+     * @description limit text to its specified limits, without breaking word.
+     */
+    const limitText = (content:string, limit:number): string => {
+        if(content.length <= limit){
+            return content
+        }
+        const lastWord = content.lastIndexOf(' ', limit)
+        return content.substring(0, lastWord) + '...';
+    }
 
     return (
         <div className="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-soft-xl rounded-2xl bg-clip-border">
@@ -80,7 +93,8 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                                                     <h6 className="mb-0 text-sm leading-normal">
                                                         {ticket.username}
                                                     </h6>
-                                                    <p className="mb-0 p-1 px-2 bg-green-500 rounded-full text-xs leading-tight text-white">
+                                                    {/* <Badge color='red' size='xs'>{ticket.user_role}</Badge> */}
+                                                    <p className="mb-0 p-1 px-1 bg-green-400 rounded-full text-xs leading-tight text-white text-center">
                                                         {ticket.user_role}
                                                     </p>
                                                 </div>
@@ -88,9 +102,19 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                                         </td>
 
                                         <td className="p-2 text-left align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                                            <p className="font-bold leading-tight my-0">{ticket.title}</p>
+                                            <p className="font-bold leading-tight my-0">
+                                                {limitText(ticket.title,30)}
+                                            </p>
                                             <span className="text-xs font-semibold leading-tight text-slate-400">
-                                                {ticket.description}
+                                                {limitText(ticket.description,40)}
+                                            </span>
+                                            <span className="text-xs font-semibold leading-tight text-slate-400 flex flex-wrap gap-2">
+                                                {ticket.Tags.split(',').map((name)=>(
+                                                    <Badge color="teal" size='xs'>
+                                                        {name}
+                                                    </Badge>
+                                                ))}
+
                                             </span>
                                         </td>
 
