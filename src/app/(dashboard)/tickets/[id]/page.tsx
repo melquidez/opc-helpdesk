@@ -21,7 +21,8 @@ interface FormData {
     status_id:number | string,
     ticketstatusname: string
     tag_name: string,
-    tag_id: string
+    tag_id: string,
+    assigned_to: number
 }
 
 interface Ticket {
@@ -43,6 +44,13 @@ interface Ticket {
     "analytics_date": string,
 }
 
+
+interface Users {
+    username: string,
+    user_role: string,
+    user_id: number
+}
+
 const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
 
 
@@ -62,8 +70,13 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
         status_id: 0,
         ticketstatusname: '',
         tag_name: 'Network',
-        tag_id: '1'
+        tag_id: '1',
+        assigned_to: 0
     })
+
+    const [users, setUsers] = useState<Users[]>([])
+
+    const [selectedUser, setSelectedUser] = useState('');
 
 
     const ticketData = async () => {
@@ -80,7 +93,25 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
             ticketstatusname: data.TicketStatus_Name,
             tag_name: data.Tags,
             tag_id: data.Tags_ID,
+            assigned_to: data.assigned_to
         })
+
+        const user_res = await fetch('/api/users',{
+            method: 'get',
+            headers: {"Content-Type": "application/json"},
+        });
+
+        const usersData = await user_res.json();
+
+        usersData.forEach(element => {
+            if(data.assigned_to === element.user_id){
+                setSelectedUser(element.username)
+            }
+        });
+        setUsers(usersData)
+
+
+
     }
 
 
@@ -199,6 +230,26 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
                                         {formData.tag_name.split(',').map((tag,key)=>(
                                             tag.trim().length > 0 ? <Badge key={key} color='yellow' size="sm">{tag.trim()}</Badge> : ''
                                         ))}
+                                    </div>
+                                </div>
+
+
+                                <div className="mb-5">
+                                    <div className="relative z-0">
+                                        <Dropdown label="Status" size="sm" inline dismissOnClick={true}
+                                                renderTrigger={()=>
+                                            <input autoComplete="false" type="text" value={selectedUser} onChange={changes} name="assigned_to_user" id="assigned_to" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
+                                        }>
+                                            {
+                                                users.map(user=>(
+                                                    user.user_role === 'IT Staff' ?
+                                                    <Dropdown.Item key={user.user_id} onClick={()=>{formData.assigned_to = user.user_id; setSelectedUser(user.username)}}>{user.username}</Dropdown.Item> :
+                                                    ''
+                                                ))
+                                            }
+                                            <input type="hidden" value={formData.assigned_to} name="assigned_to"/>
+                                        </Dropdown>
+                                        <label htmlFor="assigned_to" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Assign to</label>
                                     </div>
                                 </div>
                             </div>

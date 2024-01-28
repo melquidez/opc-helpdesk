@@ -68,6 +68,7 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
                 users.username AS username,
                 users.user_role AS user_role,
                 ticket_status.status_name AS TicketStatus_Name,
+                assigned_user.username AS assigned_to_username, -- alias for assigned_to as username
                 GROUP_CONCAT(tags.tag_name SEPARATOR ', ') AS Tags,
                 ticket_analytics.views_count,
                 ticket_analytics.resolution_time,
@@ -84,6 +85,8 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
                 tags ON ticket_tags.tag_id = tags.tag_id
             LEFT JOIN
                 ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
+            LEFT JOIN
+                users AS assigned_user ON tickets.assigned_to = assigned_user.user_id
             GROUP BY
                 tickets.ticket_id  -- Assuming ticket_id is the primary key
             ORDER BY
@@ -119,7 +122,8 @@ interface FormData {
     title:string
     description: string
     tag_id: Array<number> | number
-    tag_name:string
+    tag_name:string,
+    assigned_to: number
 }
 interface CookieData {
     "username":string
@@ -191,8 +195,8 @@ export const PUT = async (req:Request, res: Response) => {
         await db.transaction();
 
         // Update ticket
-        const ticketQuery = 'UPDATE tickets SET title = ?, description = ?, status_id = ?, updated_at = NOW() WHERE ticket_id = ?';
-        await db.query(ticketQuery, [data.title, data.description, data.status_id, data.ticket_id]);
+        const ticketQuery = 'UPDATE tickets SET title = ?, description = ?, assigned_to = ?, status_id = ?, updated_at = NOW() WHERE ticket_id = ?';
+        await db.query(ticketQuery, [data.title, data.description, data.assigned_to, data.status_id, data.ticket_id]);
 
         // Fetch existing tags and tags to insert
         const tagsQuery = 'SELECT tag_id, tag_name FROM tags';

@@ -20,6 +20,7 @@ interface Ticket {
     "views_count": number,
     "resolution_time": number,
     "analytics_date": string,
+    "assigned_to_username": string
 }
 
 interface TicketListProps {
@@ -123,7 +124,7 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                                                 {ticket.TicketStatus_Name}
                                             </span>
                                             <p className="mb-0 text-xs leading-tight text-slate-400">
-                                                Not Assigned
+                                                {ticket.assigned_to_username || 'not assigned'}
                                             </p>
                                         </td>
                                         <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
