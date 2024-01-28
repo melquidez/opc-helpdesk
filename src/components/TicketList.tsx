@@ -109,8 +109,8 @@ const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
                                                 {limitText(ticket.description,40)}
                                             </span>
                                             <span className="text-xs font-semibold leading-tight text-slate-400 flex flex-wrap gap-2">
-                                                {ticket.Tags.split(',').map((name)=>(
-                                                    <Badge color="teal" size='xs'>
+                                                {ticket.Tags.split(',').map((name, key)=>(
+                                                    <Badge key={key} color="teal" size='xs'>
                                                         {name}
                                                     </Badge>
                                                 ))}

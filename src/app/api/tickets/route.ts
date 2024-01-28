@@ -16,6 +16,9 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
                 users.user_role AS user_role,
                 ticket_status.status_name AS TicketStatus_Name,
                 GROUP_CONCAT(tags.tag_name) AS Tags,
+
+                GROUP_CONCAT(tags.tag_id) AS Tags_ID,
+
                 ticket_analytics.views_count,
                 ticket_analytics.resolution_time,
                 ticket_analytics.analytics_date
@@ -135,6 +138,7 @@ export const POST = async (req: Request, res: Response)=>{
         const ticketQuery = 'INSERT INTO tickets (title, description, user_id, status_id, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())';
         const ticketTagsQuery = 'INSERT INTO ticket_tags (ticket_id, tag_id, ticket_tag_created_at, ticket_tag_updated_at) VALUES (?, ?, NOW(), NOW())';
 
+
         const tag_ids = data.tag_id
         const ticketData = await db.transaction().query(
             ticketQuery,
@@ -167,28 +171,105 @@ export const POST = async (req: Request, res: Response)=>{
 }
 
 
-export const PUT = async (req: Request, res: Response)=>{
-    try{
+interface TAG_LIST {
+    tag_name:string,
+    tag_id: number
+}
+
+
+export const PUT = async (req:Request, res: Response) => {
+    try {
+
         const data: FormData = await req.json();
         const user: CookieData | undefined = userDetails();
 
-        // check if undefined
-        if (!user){
-            return Response.json({error: 'Unauthorized!'})
+        if (!user) {
+            return Response.json({ error: 'Unauthorized!' });
         }
-        const query = 'UPDATE tickets SET title = ?, description = ?, status_id = ? , updated_at = NOW() WHERE ticket_id = ?';
 
-        const result = await db.query(query,
-            [data.title, data.description, data.status_id, data.ticket_id]
-        );
+        // Start transaction
+        await db.transaction();
+
+        // Update ticket
+        const ticketQuery = 'UPDATE tickets SET title = ?, description = ?, status_id = ?, updated_at = NOW() WHERE ticket_id = ?';
+        await db.query(ticketQuery, [data.title, data.description, data.status_id, data.ticket_id]);
+
+        // Fetch existing tags and tags to insert
+        const tagsQuery = 'SELECT tag_id, tag_name FROM tags';
+        const existingAndNewTags: Array<TAG_LIST> = await db.query(tagsQuery);
+
+        // Separate existing and new tags
+        const { existingTags, newTags } = separateTags(existingAndNewTags, data.tag_name);
+
+        // Delete existing tags not in the input list
+        const deleteQuery = 'DELETE FROM ticket_tags WHERE ticket_id = ? AND tag_id NOT IN (?)';
+        await db.query(deleteQuery, [data.ticket_id, existingTags.map((tag) => tag && tag.tag_id)]);
+
+        // Insert new tags
+        if (newTags.length > 0) {
+            // Filter out duplicates
+            const uniqueNewTags = newTags.filter((tag) => !existingTags.some((existingTag) => existingTag?.tag_name === tag));
+
+            // Insert new tags
+            if (uniqueNewTags.length > 0) {
+                const insertNewTagQuery = 'INSERT INTO tags (tag_name) VALUES ?';
+                const newTagValues = uniqueNewTags.map((tag) => [tag]);
+                await db.query(insertNewTagQuery, [newTagValues]);
+            }
+        }
+
+        // Fetch tag IDs for all tags
+        const allTags: Array<TAG_LIST> = await db.query(tagsQuery);
+
+        // Insert ticket_tags for existing tags
+        const insertExistingTagQuery = 'INSERT INTO ticket_tags (ticket_id, tag_id, ticket_tag_created_at, ticket_tag_updated_at) VALUES (?, ?, NOW(), NOW())';
+        for (const existingTag of existingTags) {
+            const tagExistingQuery =  'SELECT COUNT(*) as count FROM ticket_tags WHERE ticket_id = ? AND tag_id = ?';
+            const res: Array<any> = await db.query(tagExistingQuery,[data.ticket_id, existingTag?.tag_id])
+
+            if(res && res[0] && res[0].count === 0){
+                await db.query(insertExistingTagQuery, [data.ticket_id, existingTag?.tag_id]);
+            }
+        }
+
+        // Insert ticket_tags for new tags
+        const tagIdsMap = new Map(allTags.map((tag) => [tag.tag_name, tag.tag_id]));
+        const insertNewTagQuery = 'INSERT INTO ticket_tags (ticket_id, tag_id, ticket_tag_created_at, ticket_tag_updated_at) VALUES (?, ?, NOW(), NOW())';
+        for (const newTag of newTags) {
+            await db.query(insertNewTagQuery, [data.ticket_id, tagIdsMap.get(newTag)]);
+        }
 
 
-        return Response.json({message: 'Ticket posted successfully!'})
-    } catch(error){
-        console.log(error)
-        return Response.json({ error: error, message: 'Failed to create ticket!' });
-    } finally{
+        // Commit transaction
+        await db.transaction().commit();
+
+        return Response.json({ message: 'Ticket updated successfully!' });
+    } catch (error) {
+        // Rollback in case of an error
+        await db.transaction().rollback;
+        console.log(error);
+        return Response.json({ error: error, message: 'Failed to update ticket!' });
+    } finally {
         await db.end();
     }
 }
 
+
+const separateTags = (tagList:Array<TAG_LIST>, inputTags:string) => {
+    const existingTags = [];
+    const newTags = [];
+
+    const tagMap = new Map(tagList.map((tag)=>[tag.tag_name, tag]))
+
+    const inputTagName = inputTags.split(',').map((tag)=>tag.trim());
+
+    for(const tagName of inputTagName){
+        if(tagMap.has(tagName)){
+            existingTags.push(tagMap.get(tagName))
+        }else{
+            newTags.push(tagName);
+        }
+    }
+
+    return {existingTags, newTags}
+}
