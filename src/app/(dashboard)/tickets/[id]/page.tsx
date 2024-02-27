@@ -1,18 +1,9 @@
-
-
 'use client'
-// import { userInfo } from "@/tools/auth";
 import modalState from "@/tools/modalState";
 import { useRouter } from "next/navigation";
 import React, { SyntheticEvent, useEffect, useState } from "react";
 import { Badge, Dropdown } from "flowbite-react";
 
-
-// interface ModalProps {
-//     data?: any
-//     isOpen?: boolean
-//     onClose?: ()=> void;
-// }
 
 interface FormData {
     ticket_id:number | string,
@@ -96,22 +87,19 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
             assigned_to: data.assigned_to
         })
 
-        const user_res = await fetch('/api/users',{
+        const user_res = await fetch('/api/users?user=all',{
             method: 'get',
             headers: {"Content-Type": "application/json"},
         });
 
         const usersData = await user_res.json();
 
-        usersData.forEach(element => {
+        usersData.forEach((element: Users) => {
             if(data.assigned_to === element.user_id){
                 setSelectedUser(element.username)
             }
         });
         setUsers(usersData)
-
-
-
     }
 
 
@@ -207,7 +195,7 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
                                 </div>
 
                                 <div className="mb-5">
-                                    <div className="relative z-0">
+                                    <div className="relative z-1">
                                         {/* <input type="text" name="title" value={formData.title} onChange={changes} id="title" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " /> */}
                                         <Dropdown label="Status" size="sm" inline dismissOnClick={true}
                                             renderTrigger={()=>
@@ -217,7 +205,7 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
                                             <Dropdown.Item onClick={()=>{formData.status_id = 2; formData.ticketstatusname= 'In Progress'}}>In Progress</Dropdown.Item>
                                             <Dropdown.Item onClick={()=>{formData.status_id = 3; formData.ticketstatusname= 'Closed'}}>Closed</Dropdown.Item>
                                         </Dropdown>
-                                        <label htmlFor="status" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Status</label>
+                                        <label htmlFor="status" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3  origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Status</label>
                                     </div>
                                 </div>
 
@@ -226,7 +214,7 @@ const UpdateTicketForm = ({ params }: { params: { id: string } }) => {
                                         <input autoComplete="false" type="text" value={formData.tag_name} onChange={changes} name="tag_name" id="tags" className="block py-2.5 px-0 w-full text-sm text-gray-900 bg-transparent border-0 border-b-2 border-gray-300 appearance-none dark:border-gray-600 dark:focus:border-blue-500 focus:outline-none focus:ring-0 focus:border-blue-600 peer" placeholder=" " />
                                         <label htmlFor="tags" className="absolute text-sm text-gray-500 dark:text-gray-400 duration-300 transform -translate-y-6 scale-75 top-3 -z-10 origin-[0] peer-focus:start-0 peer-focus:text-blue-600 peer-focus:dark:text-blue-500 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-focus:scale-75 peer-focus:-translate-y-6 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto">Categories</label>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 z-1">
                                         {formData.tag_name.split(',').map((tag,key)=>(
                                             tag.trim().length > 0 ? <Badge key={key} color='yellow' size="sm">{tag.trim()}</Badge> : ''
                                         ))}

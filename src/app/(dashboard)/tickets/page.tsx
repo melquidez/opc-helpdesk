@@ -84,11 +84,15 @@ const Tickets: React.FC = () => {
             <div className="w-full px-6 py-6 mx-auto">
                 <div className="flex flex-wrap -mx-3">
                     <div className="flex-none w-full max-w-full px-3">
-                        <Suspense fallback={<Spinner aria-label="Loading..."/>}>
+                        {/* <Suspense fallback={<Spinner aria-label="Loading..."/>}>
                             <TicketList tickets={tickets} >
                                 <AddTicketBtn />
                             </TicketList>
-                        </Suspense>
+                        </Suspense> */}
+
+                        <TicketList tickets={tickets} >
+                            <AddTicketBtn />
+                        </TicketList>
 
                         <ReactPaginate
                             breakLabel="..."
