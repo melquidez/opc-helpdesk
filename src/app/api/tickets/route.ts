@@ -33,6 +33,8 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
             `;
 
             const data = await db.query(query, [ticketId]);
+
+            // lint problem with ...data
             return Response.json(...data);
         }
 
