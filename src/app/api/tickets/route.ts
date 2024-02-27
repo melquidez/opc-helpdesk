@@ -1,16 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import db from "@/tools/db";
 import { userDetails } from "@/tools/auth";
+import { Ticket } from "@/tools/Interfaces"
 
-
-export const GET = async (req: NextRequest, res: NextResponse) => {
-    try {
-
-        const searchParam = req.nextUrl.searchParams;
-
-        if (searchParam.has('id')) {
-            const ticketId = searchParam.get('id');
-            const query = `
+// Note used for Update data
+const getTicket = async (ticketId:string):Promise<Ticket[]> =>{
+        const query = `
             SELECT SQL_CALC_FOUND_ROWS tickets.*,
                 users.username AS username,
                 users.user_role AS user_role,
@@ -30,65 +25,73 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
                 LEFT JOIN ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
                 WHERE tickets.ticket_id = ?
                 GROUP BY tickets.ticket_id; -- Group by ticket ID to handle multiple tags
-            `;
+        `;
 
-            const data = await db.query(query, [ticketId]);
+        return await db.query(query, [ticketId]);
+}
 
-            // lint problem with ...data
-            return Response.json(...data);
+// start get method
+export const GET = async (req: NextRequest, res: NextResponse) => {
+    try {
+
+        const searchParam = req.nextUrl.searchParams;
+        if(searchParam.has('id')){
+            const ticket = await getTicket(searchParam.get('id') || '');
+
+            // problem with spread
+            return Response.json(ticket[0])
         }
 
 
+        if(searchParam.has('page')){
+            const page:any = searchParam.get('page') || 1;
+            const pageSize = 5;
+            const offset = (page - 1) * pageSize;
 
-        const qString = req.nextUrl.searchParams;
-        const page:any = qString.get('page') || 1;
-        const pageSize = 5;
-        const offset = (page - 1) * pageSize;
+            const query = `
+                SELECT SQL_CALC_FOUND_ROWS
+                    tickets.*,
+                    users.username AS username,
+                    users.user_role AS user_role,
+                    ticket_status.status_name AS TicketStatus_Name,
+                    assigned_user.username AS assigned_to_username, -- alias for assigned_to as username
+                    GROUP_CONCAT(tags.tag_name SEPARATOR ', ') AS Tags,
+                    ticket_analytics.views_count,
+                    ticket_analytics.resolution_time,
+                    ticket_analytics.analytics_date
+                FROM
+                    tickets
+                JOIN
+                    users ON tickets.user_id = users.user_id
+                JOIN
+                    ticket_status ON tickets.status_id = ticket_status.status_id
+                LEFT JOIN
+                    ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
+                LEFT JOIN
+                    tags ON ticket_tags.tag_id = tags.tag_id
+                LEFT JOIN
+                    ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
+                LEFT JOIN
+                    users AS assigned_user ON tickets.assigned_to = assigned_user.user_id
+                GROUP BY
+                    tickets.ticket_id  -- Assuming ticket_id is the primary key
+                ORDER BY
+                    tickets.created_at DESC
+                LIMIT ?, ?;
+            `
 
-        const query = `
-            SELECT SQL_CALC_FOUND_ROWS
-                tickets.*,
-                users.username AS username,
-                users.user_role AS user_role,
-                ticket_status.status_name AS TicketStatus_Name,
-                assigned_user.username AS assigned_to_username, -- alias for assigned_to as username
-                GROUP_CONCAT(tags.tag_name SEPARATOR ', ') AS Tags,
-                ticket_analytics.views_count,
-                ticket_analytics.resolution_time,
-                ticket_analytics.analytics_date
-            FROM
-                tickets
-            JOIN
-                users ON tickets.user_id = users.user_id
-            JOIN
-                ticket_status ON tickets.status_id = ticket_status.status_id
-            LEFT JOIN
-                ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
-            LEFT JOIN
-                tags ON ticket_tags.tag_id = tags.tag_id
-            LEFT JOIN
-                ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
-            LEFT JOIN
-                users AS assigned_user ON tickets.assigned_to = assigned_user.user_id
-            GROUP BY
-                tickets.ticket_id  -- Assuming ticket_id is the primary key
-            ORDER BY
-                tickets.created_at DESC
-            LIMIT ?, ?;
-        `
+            const countQuery = "SELECT COUNT(*) AS total FROM tickets";
 
-        const countQuery = "SELECT COUNT(*) AS total FROM tickets";
+            const [results, totalResults]: any = await Promise.all([
+                db.query(query, [offset, pageSize]),
+                db.query(countQuery)
+            ]);
 
-        const [results, totalResults]: any = await Promise.all([
-            db.query(query, [offset, pageSize]),
-            db.query(countQuery)
-        ]);
+            const totalTickets = totalResults[0].total;
+            const totalPages = Math.ceil(totalTickets / pageSize);
 
-        const totalTickets = totalResults[0].total;
-        const totalPages = Math.ceil(totalTickets / pageSize);
-
-        return Response.json({ totalTickets, totalPages, results });
-
+            return Response.json({ totalTickets, totalPages, results });
+        }
 
     } catch (error) {
         console.error("Error fetching data:", error);

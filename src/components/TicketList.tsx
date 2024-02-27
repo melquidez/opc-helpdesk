@@ -4,29 +4,15 @@ import Link from "next/link";
 import React, { Children, ReactNode, useState } from "react";
 import AcceptTicket from "./AcceptTicket";
 import TicketItem from "./TicketItem";
+import { Ticket } from "@/tools/Interfaces";
 
 
-interface Ticket {
-    "ticket_id": number,
-    "title": string,
-    "description": string,
-    "user_id": number,
-    "assigned_to": number,
-    "status_id": number,
-    "created_at": string,
-    "updated_at": string,
-    "username": string,
-    "user_role": string,
-    "TicketStatus_Name": string,
-    "Tags": string,
-    "views_count": number,
-    "resolution_time": number,
-    "analytics_date": string,
+interface Tickets extends Ticket {
     "assigned_to_username": string
 }
 
 interface TicketListProps {
-    tickets: Ticket[],
+    tickets: Tickets[],
     children?: ReactNode
 }
 
