@@ -11,7 +11,7 @@ interface TopNavigationProps {
 }
 
 
-const TopNavigation: React.FC<TopNavigationProps> = ( {data} ) => {
+const TopNavigation: React.FC<TopNavigationProps> = ( { data } ) => {
     return (
         // <!-- Navbar -->
         <nav

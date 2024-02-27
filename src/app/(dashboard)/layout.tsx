@@ -5,7 +5,7 @@ import SideNavigation from "@/components/SideNavigation";
 import Script from "next/script";
 import TopNavigation from "@/components/TopNavigation";
 // import TopNavigation from "@/components/TopNavigation";
-import { decodeToken, getAuthToken, isLoggedIn } from "@/tools/auth";
+import { decodeToken, getAuthToken, isLoggedIn, userDetails } from "@/tools/auth";
 import { redirect } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -23,7 +23,8 @@ export default function RootLayout({children,}: {children: React.ReactNode;}) {
         redirect('/login');
     }
 
-    const userInfo = decodeToken(getAuthToken().value || null);
+    // const userInfo = decodeToken(getAuthToken().value || null);
+    const userInfo = userDetails();
 
 
     return (

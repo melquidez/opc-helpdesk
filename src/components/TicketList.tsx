@@ -1,7 +1,9 @@
-import { Badge, Dropdown, DropdownItem } from "flowbite-react";
+import { Badge, Dropdown, DropdownItem, Modal } from "flowbite-react";
 import Image from "next/image";
 import Link from "next/link";
-import React, { Children, ReactNode } from "react";
+import React, { Children, ReactNode, useState } from "react";
+import AcceptTicket from "./AcceptTicket";
+import TicketItem from "./TicketItem";
 
 
 interface Ticket {
@@ -29,134 +31,102 @@ interface TicketListProps {
 }
 
 const TicketList: React.FC<TicketListProps> = ({tickets, children}) => {
-    /**
-     *
-     * @param content string
-     * @param limit number
-     * @returns string
-     * @description limit text to its specified limits, without breaking word.
-     */
-    const limitText = (content:string, limit:number): string => {
-        if(content.length <= limit){
-            return content
+
+    const [openModal, setOpenModal] = useState(false);
+
+    const [selectedTicket, setSelectedTicket] = useState<Ticket | null >(null);
+
+    const handleDoubleClick = (ticket:Ticket) => {
+        setSelectedTicket(ticket)
+        setOpenModal(true)
+    }
+
+    const handleStatusChange = (status: string) =>{
+        if(selectedTicket){
+            selectedTicket.TicketStatus_Name  = status
         }
-        const lastWord = content.lastIndexOf(' ', limit)
-        return content.substring(0, lastWord) + '...';
+        console.log(tickets)
+        // console.log(ticket_status)
     }
 
     return (
-        <div className="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-soft-xl rounded-2xl bg-clip-border">
-            <div className="p-6 pb-0 mb-0 bg-white border-b-0 border-b-solid rounded-t-2xl border-b-transparent">
-                <div className="flex flex-cols justify-between items-center">
-                    <h6 className="flex justify-start">Tickets</h6>
-                    <div className="flex justify-end w-1/2 max-w-full px-3 text-right">
-                        {children}
+        <>
+            <div className="relative flex flex-col min-w-0 mb-6 break-words bg-white border-0 border-transparent border-solid shadow-soft-xl rounded-2xl bg-clip-border">
+                <div className="p-6 pb-0 mb-0 bg-white border-b-0 border-b-solid rounded-t-2xl border-b-transparent">
+                    <div className="flex flex-cols justify-between items-center">
+                        <h6 className="flex justify-start">Tickets</h6>
+                        <div className="flex justify-end w-1/2 max-w-full px-3 text-right">
+                            {children}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex-auto px-0 pt-0 pb-2">
+                    <div className="p-0 overflow-x-auto">
+                        <table className="items-center w-full mb-0 align-top border-gray-200 text-slate-500">
+                            <thead className="align-bottom">
+                                <tr>
+                                    <th className="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
+                                        User
+                                    </th>
+                                    <th className="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
+                                        Issue
+                                    </th>
+                                    <th className="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
+                                        Date
+                                    </th>
+                                    <th className="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b border-gray-200 border-solid shadow-none tracking-none whitespace-nowrap text-slate-400 opacity-70"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {tickets.map((ticket) => (
+                                    <TicketItem
+                                        onClick={() => handleDoubleClick(ticket)}
+                                        key={ticket.ticket_id}
+                                        ticket={ticket}
+                                    />
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
-            <div className="flex-auto px-0 pt-0 pb-2">
-                <div className="p-0 overflow-x-auto">
-                    <table className="items-center w-full mb-0 align-top border-gray-200 text-slate-500">
-                        <thead className="align-bottom">
-                            <tr>
-                                <th className="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                                    User
-                                </th>
-                                <th className="px-6 py-3 font-bold text-left uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                                    Issue
-                                </th>
-                                <th className="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                                    Status/Support
-                                </th>
-                                <th className="px-6 py-3 font-bold text-center uppercase align-middle bg-transparent border-b border-gray-200 shadow-none text-xxs border-b-solid tracking-none whitespace-nowrap text-slate-400 opacity-70">
-                                    Date
-                                </th>
-                                <th className="px-6 py-3 font-semibold capitalize align-middle bg-transparent border-b border-gray-200 border-solid shadow-none tracking-none whitespace-nowrap text-slate-400 opacity-70"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {
-                                tickets.map((ticket)=>(
-                                    <tr key={ticket.ticket_id}>
-                                        <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                                            <div className="flex px-2 py-1">
-                                                <div>
-                                                    <Image
-                                                        src="/assets/img/team-1.jpg"
-                                                        className="inline-flex items-center justify-center mr-4 text-sm text-white transition-all duration-200 ease-soft-in-out h-15 w-15 rounded-xl"
-                                                        alt="user"
-                                                        width="50"
-                                                        height="50"
-                                                        />
-                                                </div>
-                                                <div className="flex flex-col justify-center">
-                                                    <h6 className="mb-0 text-sm leading-normal">
-                                                        {ticket.username}
-                                                    </h6>
-                                                    {/* <Badge color='red' size='xs'>{ticket.user_role}</Badge> */}
-                                                    <p className="mb-0 p-1 px-1 bg-green-400 rounded-full text-xs leading-tight text-white text-center">
-                                                        {ticket.user_role}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        <td className="p-2 text-left align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                                            <p className="font-bold leading-tight my-0">
-                                                {limitText(ticket.title,30)}
-                                            </p>
-                                            <span className="text-xs font-semibold leading-tight text-slate-400">
-                                                {limitText(ticket.description,40)}
-                                            </span>
-                                            <span className="text-xs font-semibold leading-tight text-slate-400 flex flex-wrap gap-2">
-                                                {ticket.Tags.split(',').map((name, key)=>(
-                                                    <Badge key={key} color="teal" size='xs'>
-                                                        {name}
-                                                    </Badge>
-                                                ))}
-
-                                            </span>
-                                        </td>
-
-                                        <td className="p-2 text-sm leading-normal text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                                            <span className="bg-gradient-to-tl from-green-600 to-lime-400 px-2.5 text-xs rounded-1.8 py-1.4 inline-block whitespace-nowrap text-center align-baseline font-bold uppercase leading-none text-white">
-                                                {ticket.TicketStatus_Name}
-                                            </span>
-                                            <p className="mb-0 text-xs leading-tight text-slate-400">
-                                                {ticket.assigned_to_username || 'not assigned'}
-                                            </p>
-                                        </td>
-                                        <td className="p-2 text-center align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                                            <span className="text-xs font-semibold leading-tight text-slate-400">
-                                                {new Date(ticket.created_at).toISOString()}
-                                            </span>
-                                        </td>
-                                        <td className="p-2 align-middle bg-transparent border-b whitespace-nowrap shadow-transparent">
-                                            {/* <i className="fa fa-ellipsis-v"></i> */}
-                                            <Dropdown label="" renderTrigger={()=>
-                                                <span className="p-3 cursor-pointer">
-                                                    <i className="fa fa-ellipsis-v"></i>
-                                                </span>
-                                            }>
-                                                <DropdownItem>
-                                                    <Link href={'/tickets/' + ticket.ticket_id}
-                                                        className="text-xs font-semibold leading-tight text-slate-400 flex justify-between items-center"
-                                                    >
-                                                        <i className="fa fa-edit"></i>
-                                                        &nbsp; Edit
-                                                    </Link>
-                                                </DropdownItem>
-                                            </Dropdown>
-                                        </td>
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            <Modal
+                className="z-[9999]"
+                show={openModal}
+                onClose={() => setOpenModal(false)}
+            >
+                <Modal.Header>
+                    {selectedTicket?.title}
+                    <div className="text-center">
+                        <Badge color="yellow" size="sm"> {selectedTicket?.TicketStatus_Name}</Badge>
+                    </div>
+                </Modal.Header>
+                <Modal.Body>
+                    <div className="space-y-6">
+                        <p className="text-base leading-relaxed text-gray-500 dark:text-gray-400">
+                            {selectedTicket?.description}
+                        </p>
+                        <div className="flex gap-2 z-1 items-center">
+                            <span className="text-sm"><b>Tags:</b></span>
+                            {selectedTicket?.Tags.split(',').map((tag,key)=>(
+                                tag.trim().length > 0 ? <Badge key={key} color='green' size="sm">{tag.trim()}</Badge> : ''
+                            ))}
+                        </div>
+                    </div>
+                </Modal.Body>
+                <Modal.Footer>
+                    {
+                        selectedTicket?.TicketStatus_Name === 'In Progress' ||
+                        <AcceptTicket closeModal={()=>setOpenModal(false)} ticket_id={selectedTicket?.ticket_id || 0} status_change={handleStatusChange}/>
+                    }
+                </Modal.Footer>
+            </Modal>
+        </>
     );
 };
 

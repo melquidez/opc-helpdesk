@@ -43,25 +43,6 @@ export const GET = async (req: NextRequest, res: NextResponse) => {
         const pageSize = 5;
         const offset = (page - 1) * pageSize;
 
-        // const query = `
-        //     SELECT SQL_CALC_FOUND_ROWS tickets.*,
-        //         users.username AS username,
-        //         users.user_role AS user_role,
-        //         ticket_status.status_name AS TicketStatus_Name,
-        //         GROUP_CONCAT(tags.tag_name) AS Tags,
-        //         ticket_analytics.views_count,
-        //         ticket_analytics.resolution_time,
-        //         ticket_analytics.analytics_date
-        //     FROM tickets
-        //         JOIN users ON tickets.user_id = users.user_id
-        //         JOIN ticket_status ON tickets.status_id = ticket_status.status_id
-        //         LEFT JOIN ticket_tags ON tickets.ticket_id = ticket_tags.ticket_id
-        //         LEFT JOIN tags ON ticket_tags.tag_id = tags.tag_id
-        //         LEFT JOIN ticket_analytics ON tickets.ticket_id = ticket_analytics.ticket_id
-        //     ORDER BY tickets.created_at DESC
-        //     LIMIT ?, ?;
-        // `;
-
         const query = `
             SELECT SQL_CALC_FOUND_ROWS
                 tickets.*,
@@ -141,6 +122,11 @@ export const POST = async (req: Request, res: Response)=>{
         }
         const ticketQuery = 'INSERT INTO tickets (title, description, user_id, status_id, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())';
         const ticketTagsQuery = 'INSERT INTO ticket_tags (ticket_id, tag_id, ticket_tag_created_at, ticket_tag_updated_at) VALUES (?, ?, NOW(), NOW())';
+        const ticketAnalyticsQuery = `
+                INSERT INTO ticket_analytics
+                    (ticket_id, analytics_date)
+                VALUES (?, NOW())
+        `;
 
 
         const tag_ids = data.tag_id
@@ -157,7 +143,8 @@ export const POST = async (req: Request, res: Response)=>{
                 })
                 await Promise.all(tagPromise)
             } else{
-                await db.query(ticketTagsQuery,[r.insertId,tag_ids])
+                await db.query(ticketTagsQuery,[r.insertId, tag_ids]);
+                await db.query(ticketAnalyticsQuery, [r.insertId]);
             }
 
         }).rollback((e: any )=> {
