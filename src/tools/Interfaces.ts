@@ -1,0 +1,18 @@
+export interface Ticket {
+    "ticket_id": number,
+    "title": string,
+    "description": string,
+    "user_id": number,
+    "assigned_to": number,
+    "status_id": number,
+    "created_at": string,
+    "updated_at": string,
+    "username": string,
+    "user_role": string,
+    "TicketStatus_Name": string,
+    "Tags": string,
+    "Tags_ID": string,
+    "views_count": number,
+    "resolution_time": number,
+    "analytics_date": string,
+}
